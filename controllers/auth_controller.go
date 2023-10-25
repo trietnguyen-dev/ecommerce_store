@@ -3,27 +3,29 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/example/golang-test/services/admin"
+	"github.com/example/golang-test/services/auth"
+	"github.com/example/golang-test/services/user"
 	"github.com/redis/go-redis/v9"
 	"net/http"
 	"strings"
 
 	"github.com/example/golang-test/config"
 	"github.com/example/golang-test/models"
-	"github.com/example/golang-test/services"
 	"github.com/example/golang-test/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type AuthController struct {
-	authService  services.AuthService
-	userService  services.UserService
-	adminService services.AdminService
+	authService  auth.AuthService
+	userService  user.UserService
+	adminService admin.AdminService
 	ctx          context.Context
 	goredis      *redis.Client
 }
 
-func NewAuthController(authService services.AuthService, userService services.UserService, adminService services.AdminService, ctx context.Context, goredis *redis.Client) AuthController {
+func NewAuthController(authService auth.AuthService, userService user.UserService, adminService admin.AdminService, ctx context.Context, goredis *redis.Client) AuthController {
 	return AuthController{authService, userService, adminService, ctx, goredis}
 }
 
@@ -100,6 +102,7 @@ func (ac *AuthController) SignInUser(ctx *gin.Context) {
 	//if err != nil {
 	//	panic(err)
 	//}
+
 	ctx.SetCookie("access_token", access_token, config.AccessTokenMaxAge*60, "/", "localhost", false, true)
 	ctx.SetCookie("refresh_token", refresh_token, config.RefreshTokenMaxAge*60, "/", "localhost", false, true)
 	ctx.SetCookie("logged_in", "true", config.AccessTokenMaxAge*60, "/", "localhost", false, false)

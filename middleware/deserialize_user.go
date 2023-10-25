@@ -2,16 +2,17 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/example/golang-test/services/admin"
+	"github.com/example/golang-test/services/user"
 	"net/http"
 	"strings"
 
 	"github.com/example/golang-test/config"
-	"github.com/example/golang-test/services"
 	"github.com/example/golang-test/utils"
 	"github.com/gin-gonic/gin"
 )
 
-func DeserializeUser(userService services.UserService) gin.HandlerFunc {
+func DeserializeUser(userService user.UserService) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
 		var token string
@@ -43,7 +44,7 @@ func DeserializeUser(userService services.UserService) gin.HandlerFunc {
 
 	}
 }
-func DeserializeAdmin(adminService services.AdminService) gin.HandlerFunc {
+func DeserializeAdmin(adminService admin.AdminService) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
 		var token string

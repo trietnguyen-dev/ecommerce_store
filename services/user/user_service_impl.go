@@ -1,9 +1,10 @@
-package services
+package user
 
 import (
 	"github.com/example/golang-test/config"
 	"github.com/example/golang-test/daos"
 	"github.com/example/golang-test/models"
+	"github.com/example/golang-test/utils"
 )
 
 type UserServiceImpl struct {
@@ -31,6 +32,16 @@ func (us *UserServiceImpl) FindUserByEmail(email string) (*models.DBResponse, er
 }
 func (us *UserServiceImpl) UpdateUserById(id string, user *models.UserResponse) error {
 	err := us.dao.UpdateUserById(id, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (us *UserServiceImpl) ChangePassword(id string, newPassword string) error {
+
+	hashedNewPassword, _ := utils.HashPassword(newPassword)
+	err := us.dao.ChangePassword(id, hashedNewPassword)
+
 	if err != nil {
 		return err
 	}

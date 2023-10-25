@@ -10,9 +10,9 @@ type SignUpInput struct {
 	Name            string    `json:"name" bson:"name" binding:"required"`
 	Email           string    `json:"email" bson:"email" binding:"required"`
 	Password        string    `json:"password" bson:"password" binding:"required,min=8"`
-	PasswordConfirm string    `json:"passwordConfirm" bson:"passwordConfirm,omitempty" binding:"required"`
-	PhoneNumber     string    `json:"phoneNumber" bson:"phoneNumber" binding:"required"`
-	ImageUrl        string    `json:"imageUrl" bson:"imageUrl" `
+	PasswordConfirm string    `json:"password_confirm" bson:"password_confirm,omitempty" binding:"required"`
+	PhoneNumber     string    `json:"phone_number" bson:"phone_number" binding:"required"`
+	ImageUrl        string    `json:"image_url" bson:"image_url" `
 	Role            string    `json:"role" bson:"role"`
 	Verified        bool      `json:"verified" bson:"verified"`
 	CreatedAt       time.Time `json:"created_at" bson:"created_at"`
@@ -31,8 +31,8 @@ type DBResponse struct {
 	Password    string             `json:"password" bson:"password"`
 	Role        string             `json:"role" bson:"role"`
 	Verified    bool               `json:"verified" bson:"verified"`
-	PhoneNumber string             `json:"phoneNumber" bson:"phoneNumber"`
-	ImageUrl    string             `json:"imageUrl" bson:"imageUrl"`
+	PhoneNumber string             `json:"phone_number" bson:"phone_number"`
+	ImageUrl    string             `json:"image_url" bson:"image_url"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
@@ -42,15 +42,16 @@ type UserResponse struct {
 	Name        string             `json:"name,omitempty" bson:"name,omitempty"`
 	Email       string             `json:"email,omitempty" bson:"email,omitempty"`
 	Role        string             `json:"role,omitempty" bson:"role,omitempty"`
-	ImageUrl    string             `json:"imageUrl,omitempty" bson:"imageUrl,omitempty"`
-	PhoneNumber string             `json:"phoneNumber,omitempty" bson:"PhoneNumber,omitempty"`
+	ImageUrl    string             `json:"image_url,omitempty" bson:"image_url,omitempty"`
+	PhoneNumber string             `json:"phone_number,omitempty" bson:"phone_number,omitempty"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
-type UserRole struct {
-	ID   primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Role string             `json:"role,omitempty" bson:"role"`
+type PasswordResponse struct {
+	CurrentPassword    string `json:"current_password,omitempty" bson:"current_password,omitempty"`
+	NewPassword        string `json:"new_password,omitempty" bson:"new_password,omitempty"`
+	ConfirmNewPassword string `json:"confirm_new_password,omitempty" bson:"confirm_new_password,omitempty"`
 }
 
 func FilteredResponse(user *DBResponse) UserResponse {

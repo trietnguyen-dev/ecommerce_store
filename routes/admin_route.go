@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/example/golang-test/controllers"
 	"github.com/example/golang-test/middleware"
-	"github.com/example/golang-test/services"
+	"github.com/example/golang-test/services/admin"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +15,7 @@ func NewAdminRouteController(adminController controllers.AdminController) AdminR
 	return AdminRouteController{adminController}
 }
 
-func (ac *AdminRouteController) AdminRoutes(rg *gin.RouterGroup, adminService services.AdminService) {
+func (ac *AdminRouteController) AdminRoutes(rg *gin.RouterGroup, adminService admin.AdminService) {
 	router := rg.Group("/admin")
 
 	router.GET("/login", ac.adminController.Login)
@@ -23,4 +23,5 @@ func (ac *AdminRouteController) AdminRoutes(rg *gin.RouterGroup, adminService se
 	router.Use(middleware.RequireLoggedIn())
 
 	router.GET("/getlistusers", ac.adminController.GetListUsers)
+	router.GET("/getuser", ac.adminController.GetUserById)
 }
