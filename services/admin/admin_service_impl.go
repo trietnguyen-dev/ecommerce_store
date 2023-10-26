@@ -1,4 +1,4 @@
-package services
+package admin
 
 import (
 	"github.com/example/golang-test/config"
@@ -37,4 +37,11 @@ func (as *AdminServiceImpl) FindAdminById(id string) (*models.DBResponse, error)
 		return nil, err
 	}
 	return admin, nil
+}
+func (as AdminServiceImpl) GetUserById(id string) (*models.UserResponse, error) {
+	user, err := as.dao.GetUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

@@ -100,17 +100,21 @@ func (d *DAO) UpdateUserById(id string, value *models.UserResponse) error {
 
 	return nil
 }
+func (d *DAO) ChangePassword(id string, newPasswordHash string) error {
+	ctx, cancel := utils.NewCtx()
+	defer cancel()
 
-//func (d *DAO) UpdateOne(field string, value interface{}) (*models.DBResponse, error) {
-//	query := bson.D{{Key: field, Value: value}}
-//	update := bson.D{{Key: "$set", Value: bson.D{{Key: field, Value: value}}}}
-//	result, err := uc.collection.UpdateOne(uc.ctx, query, update)
-//
-//	fmt.Print(result.ModifiedCount)
-//	if err != nil {
-//		fmt.Print(err)
-//		return &models.DBResponse{}, err
-//	}
-//
-//	return &models.DBResponse{}, nil
-//}
+	userId, _ := primitive.ObjectIDFromHex(id)
+	query := bson.M{"_id": userId}
+	update := bson.M{"$set": bson.M{"password": newPasswordHash}}
+	result, err := d.userColl.UpdateOne(ctx, query, update)
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		return errors.New("change password failed")
+	}
+
+	return nil
+}

@@ -1,9 +1,7 @@
 package daos
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/example/golang-test/models"
 	"github.com/example/golang-test/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -31,18 +29,21 @@ func (d *DAO) GetListUsers(page int64) ([]*models.DBResponse, error) {
 	ctx, cancel := utils.NewCtx()
 	defer cancel()
 	var listUser []*models.DBResponse
+	// Số lượng kết quả trên mỗi trang
+	resultsPerPage := 10
 
-	opts := options.Find().SetLimit(2).SetSkip(page)
+	// Tính toán skip dựa trên trang
+	skip := (page - 1) * int64(resultsPerPage)
+
+	opts := options.Find().SetLimit(int64(resultsPerPage)).SetSkip(skip)
+
 	cursor, err := d.userColl.Find(ctx, bson.M{}, opts)
+
 	if err != nil {
 		return nil, err
 	}
 	if err = cursor.All(ctx, &listUser); err != nil {
 		panic(err)
-	}
-	for _, result := range listUser {
-		res, _ := json.Marshal(result)
-		fmt.Println(string(res))
 	}
 	return listUser, nil
 }
@@ -60,6 +61,22 @@ func (d *DAO) FindAdminById(id string) (*models.DBResponse, error) {
 			return nil, err
 		}
 	}
+	return user, nil
+}
+func (d *DAO) GetUserById(id string) (*models.UserResponse, error) {
+	ctx, cancel := utils.NewCtx()
+	defer cancel()
+	oid, _ := primitive.ObjectIDFromHex(id)
 
+	var user *models.UserResponse
+	query := bson.M{"_id": oid}
+
+	err := d.userColl.FindOne(ctx, query).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			// This error means your query did not match any documents.
+			return nil, err
+		}
+	}
 	return user, nil
 }

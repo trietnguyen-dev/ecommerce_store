@@ -5,24 +5,23 @@ import (
 	"errors"
 	"github.com/example/golang-test/config"
 	"github.com/example/golang-test/models"
-	"github.com/example/golang-test/services"
+	"github.com/example/golang-test/services/admin"
 	"github.com/example/golang-test/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type AdminController struct {
-	adminService services.AdminService
+	adminService admin.AdminService
 	goredis      *redis.Client
 	ctx          context.Context
 	config1      config.Config
 }
 
-func NewAdminController(adminService services.AdminService, ctx context.Context, goredis *redis.Client, config1 config.Config) AdminController {
+func NewAdminController(adminService admin.AdminService, ctx context.Context, goredis *redis.Client, config1 config.Config) AdminController {
 	return AdminController{adminService, goredis, ctx, config1}
 }
 
@@ -69,10 +68,10 @@ func (ac *AdminController) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
-	err = ac.goredis.SetXX(ctx, user.ID.Hex(), refreshToken, 10*time.Hour).Err()
-	if err != nil {
-		panic(err)
-	}
+	//err = ac.goredis.SetXX(ctx, user.ID.Hex(), refreshToken, 10*time.Hour).Err()
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	ctx.SetCookie("access_token", accessToken, config1.AccessTokenMaxAge*60, "/", "localhost", false, true)
 	ctx.SetCookie("refresh_token", refreshToken, config1.RefreshTokenMaxAge*60, "/", "localhost", false, true)
@@ -93,5 +92,16 @@ func (ac *AdminController) GetListUsers(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "user": users})
+
+}
+func (ac AdminController) GetUserById(ctx *gin.Context) {
+	id := ctx.Query("id")
+	user, err := ac.adminService.GetUserById(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "user": user})
 
 }
