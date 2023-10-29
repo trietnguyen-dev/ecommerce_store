@@ -18,10 +18,11 @@ func NewAdminRouteController(adminController controllers.AdminController) AdminR
 func (ac *AdminRouteController) AdminRoutes(rg *gin.RouterGroup, adminService admin.AdminService) {
 	router := rg.Group("/admin")
 
-	router.GET("/login", ac.adminController.Login)
+	router.POST("/login", ac.adminController.Login)
 	router.Use(middleware.DeserializeAdmin(adminService))
 	router.Use(middleware.RequireLoggedIn())
 
 	router.GET("/getlistusers", ac.adminController.GetListUsers)
 	router.GET("/getuser", ac.adminController.GetUserById)
+	router.PUT("/updateuser", ac.adminController.UpdateUserById)
 }

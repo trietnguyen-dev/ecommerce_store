@@ -39,11 +39,11 @@ type DBResponse struct {
 
 type UserResponse struct {
 	ID          primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Name        string             `json:"name,omitempty" bson:"name,omitempty"`
-	Email       string             `json:"email,omitempty" bson:"email,omitempty"`
+	Name        string             `json:"name" bson:"name"`
+	Email       string             `json:"email" bson:"email"`
 	Role        string             `json:"role,omitempty" bson:"role,omitempty"`
-	ImageUrl    string             `json:"image_url,omitempty" bson:"image_url,omitempty"`
-	PhoneNumber string             `json:"phone_number,omitempty" bson:"phone_number,omitempty"`
+	ImageUrl    string             `json:"image_url" bson:"image_url"`
+	PhoneNumber string             `json:"phone_number" bson:"phone_number"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }

@@ -4,15 +4,17 @@ import (
 	"github.com/example/golang-test/config"
 	"github.com/example/golang-test/daos"
 	"github.com/example/golang-test/models"
+	"github.com/example/golang-test/services/user"
 )
 
 type AdminServiceImpl struct {
-	dao  *daos.DAO
-	conf *config.Config
+	dao         *daos.DAO
+	conf        *config.Config
+	userService *user.UserService
 }
 
-func NewAdminService(dao *daos.DAO, conf *config.Config) *AdminServiceImpl {
-	return &AdminServiceImpl{dao: dao, conf: conf}
+func NewAdminService(dao *daos.DAO, conf *config.Config, userService *user.UserService) *AdminServiceImpl {
+	return &AdminServiceImpl{dao: dao, conf: conf, userService: userService}
 }
 
 func (as *AdminServiceImpl) FindAdminByEmail(email string) (*models.DBResponse, error) {
@@ -23,12 +25,12 @@ func (as *AdminServiceImpl) FindAdminByEmail(email string) (*models.DBResponse, 
 	}
 	return user, nil
 }
-func (as *AdminServiceImpl) GetListUsers(page int64) ([]*models.DBResponse, error) {
-	users, err := as.dao.GetListUsers(page)
+func (as *AdminServiceImpl) GetListUsers(page int64) ([]*models.DBResponse, int64, error) {
+	users, count, err := as.dao.GetListUsers(page)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return users, nil
+	return users, count, nil
 }
 func (as *AdminServiceImpl) FindAdminById(id string) (*models.DBResponse, error) {
 
@@ -44,4 +46,11 @@ func (as AdminServiceImpl) GetUserById(id string) (*models.UserResponse, error) 
 		return nil, err
 	}
 	return user, nil
+}
+func (as AdminServiceImpl) UpdateUserById(id string, user *models.UserResponse) error {
+	err := as.dao.UpdateUserById(id, user)
+	if err != nil {
+		return err
+	}
+	return nil
 }

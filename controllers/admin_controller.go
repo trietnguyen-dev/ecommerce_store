@@ -85,13 +85,13 @@ func (ac *AdminController) GetListUsers(ctx *gin.Context) {
 		panic(err)
 	}
 
-	users, err := ac.adminService.GetListUsers(int64(page))
+	users, count, err := ac.adminService.GetListUsers(int64(page))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "user": users})
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "total": count, "UsersList": users})
 
 }
 func (ac AdminController) GetUserById(ctx *gin.Context) {
@@ -103,5 +103,25 @@ func (ac AdminController) GetUserById(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "user": user})
+
+}
+func (ac AdminController) UpdateUserById(ctx *gin.Context) {
+	var user *models.UserResponse
+	id := ctx.Query("id")
+
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "not a valid user"})
+		return
+	}
+
+	err := ac.adminService.UpdateUserById(id, user)
+
+	if err != nil {
+		ctx.JSON(http.StatusConflict, gin.H{"status": "error", "message": err.Error()})
+		return
+
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{})
 
 }

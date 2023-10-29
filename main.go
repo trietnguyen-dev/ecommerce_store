@@ -78,7 +78,7 @@ func init() {
 	UserRouteController = routes.NewRouteUserController(UserController)
 
 	//Admin
-	adminService = admin.NewAdminService(dao, &config1)
+	adminService = admin.NewAdminService(dao, &config1, &userService)
 	AdminController = controllers.NewAdminController(adminService, ctx, redisclient, config1)
 	AdminRouteController = routes.NewAdminRouteController(AdminController)
 
@@ -103,10 +103,12 @@ func main() {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"http://localhost:8000", "http://localhost:3000"}
 	corsConfig.AllowCredentials = true
-
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Content-Type", "Authorization"}
 	server.Use(cors.New(corsConfig))
 
 	router := server.Group("/api")
+
 	router.GET("/healthchecker", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"status": "success", "message": value})
 	})

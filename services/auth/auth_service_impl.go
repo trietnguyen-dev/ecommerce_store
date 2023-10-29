@@ -20,7 +20,7 @@ func NewAuthService(dao *daos.DAO, conf *config.Config) *AuthServiceImpl {
 	return &AuthServiceImpl{dao, conf}
 }
 
-func (ac *AuthServiceImpl) SignUpUser(user *models.SignUpInput) (*models.DBResponse, error) {
+func (ac *AuthServiceImpl) SignUpUser(user *models.SignUpInput) error {
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = user.CreatedAt
 	user.Email = strings.ToLower(user.Email)
@@ -31,12 +31,12 @@ func (ac *AuthServiceImpl) SignUpUser(user *models.SignUpInput) (*models.DBRespo
 	hashedPassword, _ := utils.HashPassword(user.Password)
 	user.Password = hashedPassword
 
-	res, err := ac.dao.SignUpUser(user)
+	err := ac.dao.SignUpUser(user)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return res, nil
+	return nil
 }
 
 func (ac *AuthServiceImpl) SignInUser(user *models.SignInInput) (*models.DBResponse, error) {
@@ -46,4 +46,20 @@ func (ac *AuthServiceImpl) SignInUser(user *models.SignInInput) (*models.DBRespo
 	}
 
 	return result, nil
+}
+func (ac *AuthServiceImpl) FindUserById(id string) (*models.DBResponse, error) {
+
+	user, err := ac.dao.FindUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+func (ac *AuthServiceImpl) IsExistUser(user *models.SignUpInput) error {
+	err := ac.dao.IsExistUser(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

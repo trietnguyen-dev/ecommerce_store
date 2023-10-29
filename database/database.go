@@ -44,7 +44,7 @@ func CreateIndexes(db *mongo.Database) error {
 	userIndexes := []mongo.IndexModel{
 		{
 			Keys: bson.D{
-				{Key: "email", Value: -1},
+				{Key: "email", Value: 1},
 				{Key: "phone_number", Value: 1},
 			},
 		},

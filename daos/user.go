@@ -11,36 +11,53 @@ import (
 	"strings"
 )
 
-func (d *DAO) SignUpUser(user *models.SignUpInput) (*models.DBResponse, error) {
+func (d *DAO) IsExistUser(user *models.SignUpInput) error {
 	ctx, cancel := utils.NewCtx()
 	defer cancel()
 
-	res, err := d.userColl.InsertOne(ctx, &user)
+	filter := bson.M{"$or": []bson.M{
+		{"email": user.Email},
+		{"phone_number": user.PhoneNumber},
+	}}
+	//findOptions := options.FindOne().SetHint("email_1_phone_number_1")
+
+	var existingUser models.SignUpInput
+	err := d.userColl.FindOne(ctx, filter).Decode(&existingUser)
+
+	if err == nil {
+		return errors.New("user with that email or phone number already exists")
+	}
+	return nil
+}
+func (d *DAO) SignUpUser(user *models.SignUpInput) error {
+	ctx, cancel := utils.NewCtx()
+	defer cancel()
+
+	filter := bson.M{"$or": []bson.M{
+		{"email": user.Email},
+		{"phone_number": user.PhoneNumber},
+	}}
+
+	var existingUser models.SignUpInput
+	findOptions := options.FindOne().SetHint("email_1_phone_number_1")
+
+	err := d.userColl.FindOne(
+		ctx,
+		filter,
+		findOptions,
+	).Decode(&existingUser)
+
+	if err == nil {
+		return errors.New("user with that email or phone number already exists")
+	}
+
+	_, err = d.userColl.InsertOne(ctx, user)
 
 	if err != nil {
-		if er, ok := err.(mongo.WriteException); ok && er.WriteErrors[0].Code == 11000 {
-			return nil, errors.New("user with that email already exist")
-		}
-		return nil, err
+		return err
 	}
 
-	// Create a unique index for the email field
-	opt := options.Index()
-	opt.SetUnique(true)
-	index := mongo.IndexModel{Keys: bson.M{"email": 1}, Options: opt}
-
-	if _, err := d.userColl.Indexes().CreateOne(ctx, index); err != nil {
-		return nil, errors.New("could not create index for email")
-	}
-
-	var newUser *models.DBResponse
-	query := bson.M{"_id": res.InsertedID}
-
-	err = d.userColl.FindOne(ctx, query).Decode(&newUser)
-	if err != nil {
-		return nil, err
-	}
-	return newUser, nil
+	return nil
 }
 
 func (d *DAO) FindUserByEmail(email string) (*models.DBResponse, error) {
@@ -69,7 +86,6 @@ func (d *DAO) FindUserById(id string) (*models.DBResponse, error) {
 	err := d.userColl.FindOne(ctx, query).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			// This error means your query did not match any documents.
 			return nil, err
 		}
 	}
@@ -81,21 +97,27 @@ func (d *DAO) UpdateUserById(id string, value *models.UserResponse) error {
 	ctx, cancel := utils.NewCtx()
 	defer cancel()
 
-	userId, _ := primitive.ObjectIDFromHex(id)
-
-	query := bson.M{"_id": userId}
-	update := bson.M{"$set": value}
-	result, err := d.userColl.UpdateOne(ctx, query, update)
+	userId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return errors.New("email update existing")
+		return err
 	}
 
-	var updatedUser models.DBResponse
-	if result.MatchedCount == 1 {
-		err := d.userColl.FindOne(ctx, bson.M{"_id": userId}).Decode(&updatedUser)
-		if err != nil {
-			return errors.New("couldn't find user" + err.Error())
-		}
+	emailCheckCondition := bson.M{
+		"_id":   bson.M{"$ne": userId},
+		"email": value.Email,
+	}
+	query := bson.M{"_id": userId}
+	update := bson.M{"$set": value}
+
+	existingUser := d.userColl.FindOne(ctx, emailCheckCondition)
+	if existingUser.Err() == nil {
+		return errors.New("email already exists")
+	}
+
+	_, err = d.userColl.UpdateOne(ctx, query, update)
+
+	if err != nil {
+		return errors.New("Update failed: " + err.Error())
 	}
 
 	return nil
