@@ -25,7 +25,7 @@ func (d *DAO) FindAdminByEmail(email string) (*models.DBResponse, error) {
 
 	return &user, nil
 }
-func (d *DAO) GetListUsers(page int64) ([]*models.DBResponse, error) {
+func (d *DAO) GetListUsers(page int64) ([]*models.DBResponse, int64, error) {
 	ctx, cancel := utils.NewCtx()
 	defer cancel()
 	var listUser []*models.DBResponse
@@ -35,17 +35,23 @@ func (d *DAO) GetListUsers(page int64) ([]*models.DBResponse, error) {
 	// Tính toán skip dựa trên trang
 	skip := (page - 1) * int64(resultsPerPage)
 
-	opts := options.Find().SetLimit(int64(resultsPerPage)).SetSkip(skip)
+	optsCount := options.Count().SetSkip(skip).SetLimit(int64(resultsPerPage))
 
-	cursor, err := d.userColl.Find(ctx, bson.M{}, opts)
-
+	count, err := d.userColl.CountDocuments(ctx, bson.M{}, optsCount)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+	optsPage := options.Find().SetLimit(int64(resultsPerPage)).SetSkip(skip)
+
+	cursor, err := d.userColl.Find(ctx, bson.M{}, optsPage)
+	if err != nil {
+		return nil, 0, err
 	}
 	if err = cursor.All(ctx, &listUser); err != nil {
 		panic(err)
 	}
-	return listUser, nil
+
+	return listUser, count, nil
 }
 func (d *DAO) FindAdminById(id string) (*models.DBResponse, error) {
 	ctx, cancel := utils.NewCtx()

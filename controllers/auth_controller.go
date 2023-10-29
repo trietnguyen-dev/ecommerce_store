@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/example/golang-test/services/admin"
 	"github.com/example/golang-test/services/auth"
 	"github.com/example/golang-test/services/user"
 	"github.com/redis/go-redis/v9"
 	"net/http"
-	"strings"
+	"time"
 
 	"github.com/example/golang-test/config"
 	"github.com/example/golang-test/models"
@@ -34,30 +35,32 @@ func NewAuthController(authService auth.AuthService, userService user.UserServic
 // )
 
 func (ac *AuthController) SignUpUser(ctx *gin.Context) {
-	var user *models.SignUpInput
+	var userInput *models.SignUpInput
 
-	if err := ctx.ShouldBindJSON(&user); err != nil {
+	if err := ctx.ShouldBindJSON(&userInput); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	if user.Password != user.PasswordConfirm {
+	if userInput.Password != userInput.PasswordConfirm {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Passwords do not match"})
 		return
 	}
 
-	newUser, err := ac.authService.SignUpUser(user)
+	//err := ac.authService.IsExistUser(userInput)
+	//if err != nil {
+	//	ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
+	//	return
+	//}
+
+	err := ac.authService.SignUpUser(userInput)
 
 	if err != nil {
-		if strings.Contains(err.Error(), "email already exist") {
-			ctx.JSON(http.StatusConflict, gin.H{"status": "error", "message": err.Error()})
-			return
-		}
-		ctx.JSON(http.StatusBadGateway, gin.H{"status": "error", "message": err.Error()})
+		ctx.JSON(http.StatusConflict, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"status": "success", "data": gin.H{"user": models.FilteredResponse(newUser)}})
+	ctx.JSON(http.StatusCreated, gin.H{"status": "success", "data": gin.H{}})
 }
 
 func (ac *AuthController) SignInUser(ctx *gin.Context) {
@@ -68,9 +71,9 @@ func (ac *AuthController) SignInUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := ac.authService.SignInUser(credentials)
+	res, err := ac.authService.SignInUser(credentials)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid email or password"})
 			return
 		}
@@ -78,36 +81,36 @@ func (ac *AuthController) SignInUser(ctx *gin.Context) {
 		return
 	}
 
-	if err := utils.VerifyPassword(user.Password, credentials.Password); err != nil {
+	if err := utils.VerifyPassword(res.Password, credentials.Password); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "Invalid email or Password"})
 		return
 	}
 
-	config, _ := config.LoadConfig1(".")
+	config1, _ := config.LoadConfig1(".")
 
 	// Generate Tokens
-	access_token, err := utils.GenerateToken(config.AccessTokenExpiresIn, user.ID, config.AccessTokenPrivateKey)
+	accessToken, err := utils.GenerateToken(config1.AccessTokenExpiresIn, res.ID, config1.AccessTokenPrivateKey)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	refresh_token, err := utils.GenerateToken(config.RefreshTokenExpiresIn, user.ID, config.RefreshTokenPrivateKey)
+	refreshToken, err := utils.GenerateToken(config1.RefreshTokenExpiresIn, res.ID, config1.RefreshTokenPrivateKey)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
 
-	//err = ac.goredis.SetXX(ctx, user.ID.Hex(), refresh_token, 10*time.Hour).Err()
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = ac.goredis.SetXX(ctx, res.ID.Hex(), refreshToken, 10*time.Hour).Err()
+	if err != nil {
+		panic(err)
+	}
 
-	ctx.SetCookie("access_token", access_token, config.AccessTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("refresh_token", refresh_token, config.RefreshTokenMaxAge*60, "/", "localhost", false, true)
-	ctx.SetCookie("logged_in", "true", config.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	ctx.SetCookie("access_token", accessToken, config1.AccessTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("refresh_token", refreshToken, config1.RefreshTokenMaxAge*60, "/", "localhost", false, true)
+	ctx.SetCookie("logged_in", "true", config1.AccessTokenMaxAge*60, "/", "localhost", false, false)
 
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "access_token": access_token})
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "access_token": accessToken})
 }
 
 func (ac *AuthController) RefreshAccessToken(ctx *gin.Context) {
@@ -128,13 +131,13 @@ func (ac *AuthController) RefreshAccessToken(ctx *gin.Context) {
 		return
 	}
 
-	user, err := ac.userService.FindUserById(fmt.Sprint(sub))
+	res, err := ac.authService.FindUserById(fmt.Sprint(sub))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "the user belonging to this token no logger exists"})
 		return
 	}
 
-	access_token, err := utils.GenerateToken(config1.AccessTokenExpiresIn, user.ID, config1.AccessTokenPrivateKey)
+	access_token, err := utils.GenerateToken(config1.AccessTokenExpiresIn, res.ID, config1.AccessTokenPrivateKey)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": err.Error()})
 		return
