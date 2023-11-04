@@ -102,16 +102,19 @@ func (d *DAO) UpdateUserById(id string, value *models.UserResponse) error {
 		return err
 	}
 
-	emailCheckCondition := bson.M{
-		"_id":   bson.M{"$ne": userId},
-		"email": value.Email,
+	emailAndPhoneCheckCondition := bson.M{
+		"_id": bson.M{"$ne": userId},
+		"$or": []bson.M{
+			{"email": value.Email},
+			{"phone_number": value.PhoneNumber},
+		},
 	}
 	query := bson.M{"_id": userId}
 	update := bson.M{"$set": value}
 
-	existingUser := d.userColl.FindOne(ctx, emailCheckCondition)
+	existingUser := d.userColl.FindOne(ctx, emailAndPhoneCheckCondition)
 	if existingUser.Err() == nil {
-		return errors.New("email already exists")
+		return errors.New("email or phone number already exists")
 	}
 
 	_, err = d.userColl.UpdateOne(ctx, query, update)

@@ -24,5 +24,7 @@ func (ac *AdminRouteController) AdminRoutes(rg *gin.RouterGroup, adminService ad
 
 	router.GET("/getlistusers", ac.adminController.GetListUsers)
 	router.GET("/getuser", ac.adminController.GetUserById)
-	router.PUT("/updateuser", ac.adminController.UpdateUserById)
+	router.PUT("/updateuser", middleware.ValidateUpdateUser(), ac.adminController.UpdateUserById)
+	router.DELETE("/deleteuser", ac.adminController.DeleteUserById)
+
 }

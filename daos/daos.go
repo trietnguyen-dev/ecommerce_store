@@ -8,10 +8,10 @@ import (
 )
 
 type DAO struct {
-	Client    *mongo.Client
-	userColl  *mongo.Collection
-	adminColl *mongo.Collection
-	//bookColl *mongo.Collection
+	Client      *mongo.Client
+	userColl    *mongo.Collection
+	adminColl   *mongo.Collection
+	productColl *mongo.Collection
 }
 
 func NewDAO(conf *config.Config) (*DAO, error) {
@@ -22,9 +22,9 @@ func NewDAO(conf *config.Config) (*DAO, error) {
 		return nil, errors.Wrap(err, "database.Init")
 	}
 	return &DAO{
-		Client:    db.Client(),
-		userColl:  db.Collection(database.UserColl),
-		adminColl: db.Collection(database.AdminColl),
-		//bookColl: db.Collection(database.BookColl),
+		Client:      db.Client(),
+		userColl:    db.Collection(database.UserColl),
+		adminColl:   db.Collection(database.AdminColl),
+		productColl: db.Collection(database.ProductColl),
 	}, nil
 }

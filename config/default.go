@@ -7,9 +7,8 @@ import (
 )
 
 type Config struct {
-	DBUri  string `mapstructure:"MONGODB_LOCAL_URI"`
-	DBName string `mapstructure:"MONGODB_NAME"`
-
+	DBUri                  string        `mapstructure:"MONGODB_LOCAL_URI"`
+	DBName                 string        `mapstructure:"MONGODB_NAME"`
 	RedisUri               string        `mapstructure:"REDIS_URL"`
 	Port                   string        `mapstructure:"PORT"`
 	AccessTokenPrivateKey  string        `mapstructure:"ACCESS_TOKEN_PRIVATE_KEY"`
@@ -28,6 +27,11 @@ type Config struct {
 	SMTPPass  string `mapstructure:"SMTP_PASS"`
 	SMTPPort  int    `mapstructure:"SMTP_PORT"`
 	SMTPUser  string `mapstructure:"SMTP_USER"`
+
+	//AWS
+	AwsBucketName      string `mapstructure:"AWS_BUCKET_NAME"`
+	AwsAccessKey       string `mapstructure:"AWS_ACCESS_KEY"`
+	AwsSecretAccessKey string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
 }
 
 func LoadConfig1(path string) (config Config, err error) {

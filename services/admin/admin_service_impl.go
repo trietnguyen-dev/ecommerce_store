@@ -5,6 +5,7 @@ import (
 	"github.com/example/golang-test/daos"
 	"github.com/example/golang-test/models"
 	"github.com/example/golang-test/services/user"
+	"time"
 )
 
 type AdminServiceImpl struct {
@@ -48,7 +49,15 @@ func (as AdminServiceImpl) GetUserById(id string) (*models.UserResponse, error) 
 	return user, nil
 }
 func (as AdminServiceImpl) UpdateUserById(id string, user *models.UserResponse) error {
+	user.UpdatedAt = time.Now()
 	err := as.dao.UpdateUserById(id, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (as AdminServiceImpl) DeleteUserById(id string) error {
+	err := as.dao.DeleteUserById(id)
 	if err != nil {
 		return err
 	}
