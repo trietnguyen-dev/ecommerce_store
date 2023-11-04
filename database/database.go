@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	UserColl  string = "users"
-	AdminColl string = "admin"
+	UserColl    string = "users"
+	AdminColl   string = "admin"
+	ProductColl string = "product"
 )
 
 // InitDB :
@@ -41,6 +42,7 @@ func InitDB(conf *config.Config) (*mongo.Database, error) {
 // CreateIndexes :
 func CreateIndexes(db *mongo.Database) error {
 	userCollection := db.Collection(UserColl)
+	productCollection := db.Collection(ProductColl)
 	userIndexes := []mongo.IndexModel{
 		{
 			Keys: bson.D{
@@ -49,12 +51,19 @@ func CreateIndexes(db *mongo.Database) error {
 			},
 		},
 	}
+	productIndexes := []mongo.IndexModel{
+		{
+			Keys: bson.D{
+				{Key: "name", Value: 1},
+			},
+		},
+	}
 
 	ctx, cancel := utils.NewCtx()
 	defer cancel()
 
 	_, err := userCollection.Indexes().CreateMany(ctx, userIndexes)
-
+	_, err = productCollection.Indexes().CreateMany(ctx, productIndexes)
 	if err != nil {
 		return err
 	}

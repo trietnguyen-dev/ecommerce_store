@@ -22,11 +22,18 @@ func NewAuthService(dao *daos.DAO, conf *config.Config) *AuthServiceImpl {
 
 func (ac *AuthServiceImpl) SignUpUser(user *models.SignUpInput) error {
 	user.CreatedAt = time.Now()
-	user.UpdatedAt = user.CreatedAt
+	user.UpdatedAt = time.Now()
 	user.Email = strings.ToLower(user.Email)
-	user.PasswordConfirm = ""
 	user.Verified = false
 	user.Role = "user"
+	switch user.Gender {
+	case "male":
+		user.Gender = "Male"
+	case "female":
+		user.Gender = "Female"
+	default:
+		user.Gender = "other"
+	}
 
 	hashedPassword, _ := utils.HashPassword(user.Password)
 	user.Password = hashedPassword
@@ -62,4 +69,11 @@ func (ac *AuthServiceImpl) IsExistUser(user *models.SignUpInput) error {
 	}
 
 	return nil
+}
+func (ac *AuthServiceImpl) FindAdminByEmail(email string) (*models.DBResponse, error) {
+	user, err := ac.dao.FindAdminByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

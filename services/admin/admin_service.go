@@ -8,4 +8,5 @@ type AdminService interface {
 	GetListUsers(page int64) ([]*models.DBResponse, int64, error)
 	GetUserById(id string) (*models.UserResponse, error)
 	UpdateUserById(id string, user *models.UserResponse) error
+	DeleteUserById(id string) error
 }

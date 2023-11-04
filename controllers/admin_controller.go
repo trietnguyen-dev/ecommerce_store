@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type AdminController struct {
@@ -68,14 +69,15 @@ func (ac *AdminController) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
-	//err = ac.goredis.SetXX(ctx, user.ID.Hex(), refreshToken, 10*time.Hour).Err()
-	//if err != nil {
-	//	panic(err)
-	//}
-
+	err = ac.goredis.Set(ctx, user.Email, refreshToken, 7*24*time.Hour).Err()
+	if err != nil {
+		panic(err)
+	}
+	ctx.Set("currentUser", user.Email)
 	ctx.SetCookie("access_token", accessToken, config1.AccessTokenMaxAge*60, "/", "localhost", false, true)
 	ctx.SetCookie("refresh_token", refreshToken, config1.RefreshTokenMaxAge*60, "/", "localhost", false, true)
 	ctx.SetCookie("logged_in", "true", config1.AccessTokenMaxAge*60, "/", "localhost", false, false)
+	ctx.SetCookie("user_email", user.Email, config1.AccessTokenMaxAge*60, "/", "localhost", false, true)
 	ctx.JSON(http.StatusOK, gin.H{"status": "success", "access_token": accessToken})
 }
 
@@ -90,8 +92,8 @@ func (ac *AdminController) GetListUsers(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
 		return
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{"status": "success", "total": count, "UsersList": users})
+	pagination := utils.GetPagination(count)
+	ctx.JSON(http.StatusOK, gin.H{"status": "success", "total": count, "pagination": pagination, "UsersList": users})
 
 }
 func (ac AdminController) GetUserById(ctx *gin.Context) {
@@ -106,15 +108,18 @@ func (ac AdminController) GetUserById(ctx *gin.Context) {
 
 }
 func (ac AdminController) UpdateUserById(ctx *gin.Context) {
-	var user *models.UserResponse
+
+	userInput := ctx.MustGet("userData").(models.UserResponse)
+
+	//var user *models.UserResponse
 	id := ctx.Query("id")
 
-	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "not a valid user"})
-		return
-	}
+	//if err := ctx.ShouldBindJSON(&user); err != nil {
+	//	ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": "not a valid user"})
+	//	return
+	//}
 
-	err := ac.adminService.UpdateUserById(id, user)
+	err := ac.adminService.UpdateUserById(id, &userInput)
 
 	if err != nil {
 		ctx.JSON(http.StatusConflict, gin.H{"status": "error", "message": err.Error()})
@@ -122,6 +127,16 @@ func (ac AdminController) UpdateUserById(ctx *gin.Context) {
 
 	}
 
+	ctx.JSON(http.StatusOK, gin.H{})
+
+}
+func (ac AdminController) DeleteUserById(ctx *gin.Context) {
+	id := ctx.Query("id")
+	err := ac.adminService.DeleteUserById(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{})
 
 }

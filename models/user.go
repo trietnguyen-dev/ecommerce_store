@@ -6,14 +6,22 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type Gender string
+
+const (
+	Male   Gender = "Male"
+	Female Gender = "Female"
+)
+
 type SignUpInput struct {
 	Name            string    `json:"name" bson:"name" binding:"required"`
 	Email           string    `json:"email" bson:"email" binding:"required"`
-	Password        string    `json:"password" bson:"password" binding:"required,min=8"`
-	PasswordConfirm string    `json:"password_confirm" bson:"password_confirm,omitempty" binding:"required"`
+	Password        string    `json:"password" bson:"password" `
+	PasswordConfirm string    `json:"password_confirm" bson:"password_confirm,omitempty"`
 	PhoneNumber     string    `json:"phone_number" bson:"phone_number" binding:"required"`
 	ImageUrl        string    `json:"image_url" bson:"image_url" `
 	Role            string    `json:"role" bson:"role"`
+	Gender          Gender    `json:"gender" bson:"gender"`
 	Verified        bool      `json:"verified" bson:"verified"`
 	CreatedAt       time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at" bson:"updated_at"`
@@ -31,6 +39,7 @@ type DBResponse struct {
 	Password    string             `json:"password" bson:"password"`
 	Role        string             `json:"role" bson:"role"`
 	Verified    bool               `json:"verified" bson:"verified"`
+	Gender      string             `json:"gender" bson:"gender"`
 	PhoneNumber string             `json:"phone_number" bson:"phone_number"`
 	ImageUrl    string             `json:"image_url" bson:"image_url"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
@@ -43,9 +52,10 @@ type UserResponse struct {
 	Email       string             `json:"email" bson:"email"`
 	Role        string             `json:"role,omitempty" bson:"role,omitempty"`
 	ImageUrl    string             `json:"image_url" bson:"image_url"`
+	Gender      string             `json:"gender,omitempty" bson:"gender,omitempty"`
 	PhoneNumber string             `json:"phone_number" bson:"phone_number"`
-	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+	//CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 }
 
 type PasswordResponse struct {
@@ -60,9 +70,10 @@ func FilteredResponse(user *DBResponse) UserResponse {
 		Email:       user.Email,
 		Name:        user.Name,
 		Role:        user.Role,
+		Gender:      user.Gender,
 		ImageUrl:    user.ImageUrl,
 		PhoneNumber: user.PhoneNumber,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
+		//CreatedAt:   user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 }

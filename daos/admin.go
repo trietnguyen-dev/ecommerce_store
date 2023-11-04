@@ -35,9 +35,9 @@ func (d *DAO) GetListUsers(page int64) ([]*models.DBResponse, int64, error) {
 	// Tính toán skip dựa trên trang
 	skip := (page - 1) * int64(resultsPerPage)
 
-	optsCount := options.Count().SetSkip(skip).SetLimit(int64(resultsPerPage))
+	//optsCount := options.Count().SetSkip(skip).SetLimit(int64(resultsPerPage))
 
-	count, err := d.userColl.CountDocuments(ctx, bson.M{}, optsCount)
+	count, err := d.userColl.CountDocuments(ctx, bson.M{})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -85,4 +85,18 @@ func (d *DAO) GetUserById(id string) (*models.UserResponse, error) {
 		}
 	}
 	return user, nil
+}
+func (d *DAO) DeleteUserById(id string) error {
+	ctx, cancel := utils.NewCtx()
+	defer cancel()
+
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = d.userColl.DeleteOne(ctx, bson.M{"_id": oid})
+	if err != nil {
+		return err
+	}
+	return nil
 }

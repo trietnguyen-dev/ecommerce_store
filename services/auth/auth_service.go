@@ -7,4 +7,5 @@ type AuthService interface {
 	IsExistUser(*models.SignUpInput) error
 	SignInUser(*models.SignInInput) (*models.DBResponse, error)
 	FindUserById(id string) (*models.DBResponse, error)
+	FindAdminByEmail(email string) (*models.DBResponse, error)
 }

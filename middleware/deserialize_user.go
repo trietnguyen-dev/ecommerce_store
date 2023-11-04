@@ -11,20 +11,7 @@ import (
 )
 
 func DeserializeUser(userService user.UserService) gin.HandlerFunc {
-
 	return func(ctx *gin.Context) {
-		//var token string
-		//authorizationHeader := ctx.Request.Header.Get("Authorization")
-		//fields := strings.Fields(authorizationHeader)
-		//
-		//if len(fields) != 0 && fields[0] == "Bearer" {
-		//	token = fields[1]
-		//}
-		//
-		//if token == "" {
-		//	ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "You are not logged in"})
-		//	return
-		//}
 		accessToken, err := ctx.Cookie("access_token")
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "Access token not found in cookie"})
@@ -45,11 +32,10 @@ func DeserializeUser(userService user.UserService) gin.HandlerFunc {
 		}
 		ctx.Set("currentUser", result)
 		ctx.Next()
-
 	}
 }
-func DeserializeAdmin(adminService admin.AdminService) gin.HandlerFunc {
 
+func DeserializeAdmin(adminService admin.AdminService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Lấy mã thông báo truy cập từ cookie
 		accessToken, err := ctx.Cookie("access_token")
@@ -58,20 +44,6 @@ func DeserializeAdmin(adminService admin.AdminService) gin.HandlerFunc {
 			return
 		}
 		ctx.Request.Header.Set("Authorization", "Bearer "+accessToken)
-		//var token string
-		//
-		//authorizationHeader := ctx.Request.Header.Get("Authorization")
-		//fields := strings.Fields(authorizationHeader)
-		//
-		//if len(fields) != 0 && fields[0] == "Bearer" {
-		//	token = fields[1]
-		//}
-		//
-		//if token == "" {
-		//	ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "You are not logged in"})
-		//	return
-		//}
-
 		config1, _ := config.LoadConfig1(".")
 
 		sub, err := utils.ValidateToken(accessToken, config1.AccessTokenPrivateKey)
